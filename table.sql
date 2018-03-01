@@ -10,12 +10,22 @@ create table tab_name(
 	constraint tab_name_pk primary key(colName1) using index tablespace users
 )
 
+--创建索引
+create [bitmap | unique] index indName on tabName(colName1 [,colName2]...) [reverse];
 --唯一索引
-constraint tab_name_uq unique(colName1,colName2)
+constraint tab_name_uq unique(colName1,colName2) tablespace ind_space;
 --主键
 constraint tab_name_pk primary key(colName1) using index tablespace users
 --外键
 constraint tab_name_fk foreign key(colName1) references tabName2(colName1)
+--创建不可见索引
+alter index indName invisible;
+--重建索引
+alter index indName rebuild 
+storage(initial 8m next 4m pctincrease 0)
+tablespace ind_space
+--访问索引时,重建这些索引
+alter index indName rebuild tablespace ind_space online
 
 --只读表
 alter table tabName read only;
@@ -42,6 +52,12 @@ create table tabName(
 	...
 )
 organization index;
+
+
+--创建只读视图
+create or replace view viewName as 
+select * from tabName
+with read only;
 
 
 --------------------------------------------------------------------------------------------------------
@@ -86,27 +102,87 @@ alter system set ddl_lock_timeout=60
 
 
 
+--------------------------------------------------------------------------------------------------------
+--创建集群表和索引
+--------------------------------------------------------------------------------------------------------
+
+--创建集群 
+create cluster clusterName(colName1 dataType [,colName2 dataType]...) [other options];
+--创建集群表
+create table tabName(
+	...
+)
+cluster clusterName(title)
+;
+--创建集群索引
+create index indexName on cluster clusterName;
 
 
 
+--------------------------------------------------------------------------------------------------------
+--序列
+--------------------------------------------------------------------------------------------------------
+create sequence seqName increment by 1 start with 1000;
 
 
 
+--------------------------------------------------------------------------------------------------------
+--分区表
+--------------------------------------------------------------------------------------------------------
 
+--范围分区,范围内的值小于但不等于最大值
+create table tabName(
+	...
+)
+partition by range(colName)
+(
+	partition part1 values less then (10) tablespace part1_ts,
+	partition part2 values less then (maxvalue) tablespace part2_ts
+);
 
+--散列分区
+create table tabName(
+	...
+)
+partition by hash(colName)
+partition 2 
+store in (part1_ts,part2_ts)
+;
 
+create table tabName(
+	...
+)
+partition by hash(colName)
+(
+	partition part1 tablespace part1_ts,
+	partition part2 tablespace part2_ts
+)
+;
 
+--列表分区
+create table tabName(
+	...
+)
+partition by list(colName)
+(
+	partition part1 values(1,2,3,4) tablespace part1_ts ,
+	partition part2 values(5,6,7,8) tablespace part2_ts ,
+	partition partOther values(default)
+)
+;
 
-
-
-
-
-
-
-
-
-
-
+--创建子分区
+create table tabName(
+	...
+)
+partition by range(colName)
+subpartition by hash(colName2)
+subpartition 8 
+(
+	partition part1 values less then (10) tablespace part1_ts,
+	partition part2 values less then (maxvalue) tablespace part2_ts
+)
+;
 
 
 
