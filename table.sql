@@ -27,6 +27,7 @@ tablespace ind_space
 --访问索引时,重建这些索引
 alter index indName rebuild tablespace ind_space online
 
+
 --只读表
 alter table tabName read only;
 alter table tabName read write;
@@ -183,6 +184,16 @@ subpartition 8
 	partition part2 values less then (maxvalue) tablespace part2_ts
 )
 ;
+
+
+--创建分区索引
+create index indexName on tabName(colName) local
+(
+	partition part1 tablespace part1_ts,
+	partition part2 tablespace part2_ts
+);
+--创建全局索引(全局索引进行唯一性检查的速度会比局部索引(分区索引)快)
+create index indexName on tabName(colName) global;
 
 
 
